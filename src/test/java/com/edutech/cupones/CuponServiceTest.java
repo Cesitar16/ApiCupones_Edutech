@@ -16,28 +16,25 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+// Import estático para usar assertThat() de AssertJ
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class CuponServiceTest {
 
-    // Se crea un 'mock' para la dependencia del servicio.
     @Mock
     private CuponRepository cuponRepository;
 
-    // Se inyecta el mock en la instancia del servicio a probar.
     @InjectMocks
     private CuponService cuponService;
 
-    // Objetos de prueba reutilizables.
     private Cupon cupon;
     private CuponDTO cuponDTO;
 
     @BeforeEach
     void setUp() {
-        // Se configuran los datos de prueba antes de cada test.
         cuponDTO = new CuponDTO();
         cuponDTO.setIdCupon(1);
         cuponDTO.setCodigo("DESCUENTO25");
@@ -54,31 +51,33 @@ class CuponServiceTest {
     @Test
     @DisplayName("Prueba del método guardar()")
     void testGuardar() {
-        // Arrange: Se le dice a Mockito qué devolver cuando se llame a save().
+        // Arrange
         when(cuponRepository.save(any(Cupon.class))).thenReturn(cupon);
 
+        // Act
         CuponDTO resultado = cuponService.guardar(cuponDTO);
 
-        // Assert: Se verifica que el resultado es correcto.
-        assertNotNull(resultado);
-        assertEquals("DESCUENTO25", resultado.getCodigo());
-        assertEquals(1, resultado.getIdCupon());
+        // Assert: Ahora usando AssertJ
+        assertThat(resultado).isNotNull();
+        assertThat(resultado.getIdCupon()).isEqualTo(1);
+        assertThat(resultado.getCodigo()).isEqualTo("DESCUENTO25");
+
         verify(cuponRepository, times(1)).save(any(Cupon.class));
     }
 
     @Test
     @DisplayName("Prueba del método listar()")
     void testListar() {
-        // Arrange: Se simula que el repositorio devuelve una lista con un cupón.
+        // Arrange
         when(cuponRepository.findAll()).thenReturn(List.of(cupon));
 
         // Act
         List<CuponDTO> resultados = cuponService.listar();
 
         // Assert
-        assertFalse(resultados.isEmpty());
-        assertEquals(1, resultados.size());
-        assertEquals(25, resultados.get(0).getDescuento());
+        assertThat(resultados).isNotEmpty();
+        assertThat(resultados).hasSize(1);
+        assertThat(resultados.get(0).getDescuento()).isEqualTo(25);
     }
 
     @Test
@@ -91,21 +90,21 @@ class CuponServiceTest {
         Optional<CuponDTO> resultado = cuponService.obtenerPorId(1);
 
         // Assert
-        assertTrue(resultado.isPresent());
-        assertEquals(1, resultado.get().getIdCupon());
+        assertThat(resultado).isPresent();
+        assertThat(resultado.get().getIdCupon()).isEqualTo(1);
     }
 
     @Test
     @DisplayName("Prueba del método obtenerPorId() cuando el cupón no existe")
     void testObtenerPorIdNoEncontrado() {
-        // Arrange: Se simula que el repositorio devuelve un Optional vacío.
+        // Arrange
         when(cuponRepository.findById(99)).thenReturn(Optional.empty());
 
         // Act
         Optional<CuponDTO> resultado = cuponService.obtenerPorId(99);
 
         // Assert
-        assertTrue(resultado.isEmpty());
+        assertThat(resultado).isEmpty();
     }
 
     @Test
@@ -123,9 +122,10 @@ class CuponServiceTest {
         Optional<CuponDTO> resultado = cuponService.actualizar(1, dtoActualizado);
 
         // Assert
-        assertTrue(resultado.isPresent());
-        assertEquals("NUEVOCODIGO", resultado.get().getCodigo());
-        assertEquals(50, resultado.get().getDescuento());
+        assertThat(resultado).isPresent();
+        assertThat(resultado.get().getCodigo()).isEqualTo("NUEVOCODIGO");
+        assertThat(resultado.get().getDescuento()).isEqualTo(50);
+
         verify(cuponRepository, times(1)).save(any(Cupon.class));
     }
 
@@ -139,10 +139,9 @@ class CuponServiceTest {
         Optional<CuponDTO> resultado = cuponService.actualizar(99, cuponDTO);
 
         // Assert
-        assertTrue(resultado.isEmpty());
+        assertThat(resultado).isEmpty();
         verify(cuponRepository, never()).save(any(Cupon.class));
     }
-
 
     @Test
     @DisplayName("Prueba del método eliminar() cuando el cupón existe")
@@ -155,7 +154,8 @@ class CuponServiceTest {
         boolean resultado = cuponService.eliminar(1);
 
         // Assert
-        assertTrue(resultado);
+        assertThat(resultado).isTrue();
+
         verify(cuponRepository, times(1)).existsById(1);
         verify(cuponRepository, times(1)).deleteById(1);
     }
@@ -170,8 +170,9 @@ class CuponServiceTest {
         boolean resultado = cuponService.eliminar(99);
 
         // Assert
-        assertFalse(resultado);
+        assertThat(resultado).isFalse();
+
         verify(cuponRepository, times(1)).existsById(99);
-        verify(cuponRepository, never()).deleteById(99); // Se verifica que NUNCA se llamó a delete.
+        verify(cuponRepository, never()).deleteById(99);
     }
 }
